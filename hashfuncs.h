@@ -5,7 +5,6 @@ pthread_rwlock_t rwlock;
 
 struct hash_struct {
 	struct args* arguments;
-	LIBSSH2_SESSION* session;
         char* source_ip;
 	pthread_t threadID;
 	time_t start_time;
@@ -31,7 +30,6 @@ void add_ip(char* source_ip, void* arguments) {
 	hs->start_time = time(NULL);
 	hs->attempts = 0;
 	hs->done = 0;
-	hs->session = NULL;
 
         HASH_ADD_STR(done_ips, source_ip, hs);
 
@@ -53,24 +51,6 @@ int update_pid(char* source_ip) {
                 return hs->start_time;
 	} else {
 		pthread_rwlock_unlock(&rwlock);
-                return 0;
-        }
-}
-
-int update_session(char* source_ip, LIBSSH2_SESSION *session) {
-
-        pthread_rwlock_wrlock(&rwlock);
-
-        struct hash_struct *hs;
-
-        HASH_FIND_STR(done_ips, source_ip, hs);
-
-        if(hs) {
-                hs->session = session;
-                pthread_rwlock_unlock(&rwlock);
-                return 1;
-        } else {
-                pthread_rwlock_unlock(&rwlock);
                 return 0;
         }
 }

