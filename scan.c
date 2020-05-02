@@ -142,10 +142,10 @@ int main(int argc, char* argv[]) {
 
 		while(running_threads >= 100) {
 			//printf("Sender sleeping. %i threads.\n", running_threads);
-                	usleep(1);
+                	usleep(5);
                 }
 
-		usleep(1);
+		usleep(400);
 
 		dest_ip.s_addr = target_in_addr.s_addr;
 
@@ -195,8 +195,8 @@ int main(int argc, char* argv[]) {
 
 	sleep(3);
 
-	while(HASH_COUNT(done_ips) > 0 || 1 == 1) {
-	//while(running_threads > 0) {
+//	while(HASH_COUNT(done_ips) > 0 || 1 == 1) {
+	while(1) {
 		//printf("Hashes: %u\n", HASH_COUNT(done_ips));
 		//printf("Running threads: %u\n", HASH_COUNT(done_ips));
 		sleep(1);

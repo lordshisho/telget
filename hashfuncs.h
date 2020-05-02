@@ -83,14 +83,18 @@ int update_done(char* source_ip) {
 
         HASH_FIND_STR(done_ips, source_ip, hs);
 
-        if(hs) {
+        if(hs->done == 0) {
                 hs->done = 1;
                 pthread_rwlock_unlock(&rwlock);
                 return 1;
-        } else {
+        } else if(hs->done == 1) {
+		pthread_rwlock_unlock(&rwlock);
+                return 2;
+	} else if(!hs) {
                 pthread_rwlock_unlock(&rwlock);
                 return 0;
         }
+	return 0;
 }
 
 int update_entry(char* source_ip) {
