@@ -14,6 +14,8 @@
 #include <fcntl.h>
 #include <string.h>
 
+#include "prompts.h"
+
 int total_open_host;
 int total_found;
 int running_threads;
@@ -62,8 +64,6 @@ int negotiate(int sock, unsigned char *buf, int len)
 
 int matchPrompt(char *bufStr) {
 
-        char *prompts = ":>%$#\0";
-
         unsigned int bufLen = strlen(bufStr);
         int i, q = 0;
 
@@ -99,8 +99,8 @@ int readUntil(int fd, char *toFind, int matchLePrompt, int timeout, int timeoutu
                         if(got == -1 || got == 0) return 0;
                         bufferUsed += got;
                         if(!negotiate(fd, initialRead, 3)) return 0;
-                } else if(strcasestr(buffer, "HTTP/1") == NULL ) {
-                        if(strcasestr(buffer, toFind) != NULL || (matchLePrompt && matchPrompt(buffer))) { found = 1; break; }
+                } else if(strcasestr(buffer, "HTTP/1")) {
+                        if(!strcasestr(buffer, toFind)|| (matchLePrompt && matchPrompt(buffer))) { found = 1; break; }
                 }
         }
 

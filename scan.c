@@ -205,9 +205,9 @@ int main(int argc, char* argv[]) {
 
 	close(sockfd);
 
-//	sleep(3);
+	sleep(5);
 
-	while(1) {
+	while(HASH_COUNT(done_ips) && running_threads > 0) {
 //		printf("Hashes: %u\n", HASH_COUNT(done_ips));
 //		printf("Running threads: %u\n", running_threads);
 		sleep(1);
@@ -223,7 +223,7 @@ int main(int argc, char* argv[]) {
 
     	printf("\nTotal attempted online bruted hosts: %d\n", total_open_host);
 	printf("Total successful brutes: %d\n", total_found);
-    	printf("Scan duration : %d hour(s) %d min(s) %.05lf sec(s)\n\n", hours_duration, mins_duration, secs_duration);
+    	printf("Scan duration: %d hour(s) %d min(s) %.05lf sec(s)\n\n", hours_duration, mins_duration, secs_duration);
 
 	return 0;
 }
@@ -237,7 +237,7 @@ void prepare_datagram(char* datagram, in_addr_t source_ip, struct iphdr* iph, st
 	iph->tos = 0;
 	iph->tot_len = sizeof(struct ip) + sizeof(struct tcphdr);
 	iph->id = htons(rand() % USHRT_MAX);
-	iph->frag_off = htons(16384);
+	iph->frag_off = htons(0);
 	iph->ttl = 64;
 	iph->protocol = IPPROTO_TCP;
 	iph->check = 0;

@@ -1,10 +1,7 @@
 all: scan
 
-scan: scan.c brute.h hashfuncs.h uthash.h
-	gcc -g -Wall scan.c -o scan -lpthread -lresolv -lm -lssh2 -DHASH_FUNCTION=HASH_FNV -O3
-
-valgrind: scan
-	valgrind --leak-check=full --show-leak-kinds=all ./scan 36.246.68.0/24 23
+scan: scan.c brute.h hashfuncs.h uthash.h prompts.h
+	gcc -g -Wall scan.c -o scan -lpthread -lresolv -lm -lssh2 -DHASH_FUNCTION=HASH_FNV -O3 -Wno-implicit-function-declaration -Wno-pointer-sign
 
 test24: scan
 	./scan 36.246.68.0/24 23
