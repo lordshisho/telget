@@ -87,7 +87,7 @@ void* thread_timer() {
 				}
 			}
     		}
-
+		//printf("Threads: %i | Hashes: %i\n", running_threads, HASH_COUNT(done_ips));
 		sleep(1);
 	}
 }
@@ -153,11 +153,11 @@ int main(int argc, char* argv[]) {
 
 	for(host_count = 0; host_count < num_hosts; host_count++) {
 
-		while(HASH_COUNT(done_ips) >= 100) {
-                	usleep(5);
+		while(running_threads >= 100) {
+                	usleep(100);
                 }
 
-		usleep(5);
+		usleep(250);
 
 		dest_ip.s_addr = target_in_addr.s_addr;
 
@@ -205,11 +205,11 @@ int main(int argc, char* argv[]) {
 
 	close(sockfd);
 
-	sleep(3);
+//	sleep(3);
 
 	while(1) {
-		printf("Hashes: %u\n", HASH_COUNT(done_ips));
-		printf("Running threads: %u\n", running_threads);
+//		printf("Hashes: %u\n", HASH_COUNT(done_ips));
+//		printf("Running threads: %u\n", running_threads);
 		sleep(1);
 	}
 
